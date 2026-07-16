@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FluxerBanners Moderation</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600&family=Google+Sans+Display:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+<style>
+  :root {
+    --md-sys-color-primary: #FFA0CB;
+    --md-sys-color-on-primary: #5C0F39;
+    --md-sys-color-primary-container: #98064F;
+    --md-sys-color-on-primary-container: #FFD9E9;
+    --md-sys-color-secondary: #E3B7CC;
+    --md-sys-color-on-secondary: #47212F;
+    --md-sys-color-secondary-container: #5F3346;
+    --md-sys-color-on-secondary-container: #FFD9E9;
+    --md-sys-color-tertiary: #D9AE6D;
+    --md-sys-color-on-tertiary: #3F2D00;
+    --md-sys-color-tertiary-container: #5A4300;
+    --md-sys-color-on-tertiary-container: #F5DFAE;
+    --md-sys-color-error: #F2B8B5;
+    --md-sys-color-on-error: #601410;
+    --md-sys-color-error-container: #8C1D18;
+    --md-sys-color-on-error-container: #F9DEDC;
+    --md-sys-color-background: #1A1116;
+    --md-sys-color-on-background: #F1DEE7;
+    --md-sys-color-surface: #1A1116;
+    --md-sys-color-on-surface: #F1DEE7;
+    --md-sys-color-surface-variant: #52434A;
+    --md-sys-color-on-surface-variant: #D6C1CA;
+    --md-sys-color-outline: #A08D95;
+    --md-sys-color-outline-variant: #52434A;
+    --md-sys-color-surface-container-lowest: #120C10;
+    --md-sys-color-surface-container-low: #201720;
+    --md-sys-color-surface-container: #251A24;
+    --md-sys-color-surface-container-high: #30232E;
+    --md-sys-color-surface-container-highest: #3B2D38;
+    --md-sys-color-inverse-surface: #F1DEE7;
+    --md-sys-color-inverse-on-surface: #38222D;
+    --md-sys-color-inverse-primary: #98064F;
+    --theme-accent-rgb: 255, 160, 203;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Google Sans', sans-serif;
+    background: var(--md-sys-color-background);
+    color: var(--md-sys-color-on-background);
+    min-height: 100vh;
+  }
+
+  .top-bar {
+    background: var(--md-sys-color-surface-container);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 16px;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+  .top-bar .material-icons-round { color: var(--md-sys-color-on-surface-variant); font-size: 24px; }
+  .top-bar h1 {
+    font-family: 'Google Sans Display', sans-serif;
+    font-size: 21px;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+    flex: 1;
+  }
+  .top-bar .sub {
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-top: 1px;
+  }
+  .top-bar .badge {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  .layout {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .card {
+    background: var(--md-sys-color-surface-container-low);
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--md-sys-color-primary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .material-icons-round { font-size: 18px; }
+  .card-sub {
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .card-sub code {
+    background: var(--md-sys-color-surface-container-highest);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    color: var(--md-sys-color-primary);
+  }
+
+  .url-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .url-input-wrap {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+  }
+  .url-input-wrap .material-icons-round {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 20px;
+    pointer-events: none;
+  }
+  .field {
+    width: 100%;
+    background: var(--md-sys-color-surface-container-highest);
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: 12px;
+    color: var(--md-sys-color-on-surface);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 13px;
+    padding: 14px 14px 14px 44px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .field:focus { border-color: var(--md-sys-color-primary); }
+  .field::placeholder { color: var(--md-sys-color-on-surface-variant); font-family: 'Google Sans', sans-serif; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    border-radius: 20px;
+    font-family: 'Google Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 10px 20px;
+    transition: all 0.2s;
+    white-space: nowrap;
+    letter-spacing: 0.1px;
+  }
+  .btn .material-icons-round { font-size: 18px; }
+  .btn-filled {
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+  }
+  .btn-filled:hover { filter: brightness(1.1); box-shadow: 0 2px 8px rgba(var(--theme-accent-rgb),0.3); }
+  .btn-tonal {
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+  }
+  .btn-tonal:hover { filter: brightness(1.1); }
+  .btn-outlined {
+    background: transparent;
+    border: 1px solid var(--md-sys-color-outline);
+    color: var(--md-sys-color-primary);
+  }
+  .btn-outlined:hover { background: rgba(var(--theme-accent-rgb),0.08); }
+  .btn:disabled { opacity: 0.38; cursor: not-allowed; }
+
+  .toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .search-wrap {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+  }
+  .search-wrap .material-icons-round {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 20px;
+    pointer-events: none;
+  }
+  #searchInput {
+    background: var(--md-sys-color-surface-container-highest);
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: 28px;
+    color: var(--md-sys-color-on-surface);
+    font-family: 'Google Sans', sans-serif;
+    font-size: 15px;
+    padding: 12px 16px 12px 46px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  #searchInput:focus {
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--theme-accent-rgb),0.15);
+  }
+  #searchInput::placeholder { color: var(--md-sys-color-on-surface-variant); }
+
+  .count-label {
+    font-size: 13px;
+    color: var(--md-sys-color-on-surface-variant);
+    white-space: nowrap;
+  }
+
+  #bannerList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .banner-card {
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    animation: slideIn 0.2s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .banner-card:hover { border-color: var(--md-sys-color-outline); box-shadow: 0 2px 12px rgba(0,0,0,0.35); }
+  .banner-card.editing { border-color: var(--md-sys-color-primary); }
+
+  .banner-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    gap: 14px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .banner-thumb {
+    width: 72px; height: 40px;
+    border-radius: 10px;
+    background: var(--md-sys-color-surface-container-highest);
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .banner-thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .banner-thumb .material-icons-round {
+    font-size: 18px;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+  .banner-meta { flex: 1; overflow: hidden; }
+  .banner-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'Roboto Mono', monospace;
+  }
+  .banner-file {
+    font-size: 11.5px;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .banner-actions { display: flex; gap: 4px; align-items: center; }
+  .icon-btn {
+    background: none;
+    border: none;
+    border-radius: 50%;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--md-sys-color-on-surface-variant);
+    transition: background 0.15s, color 0.15s;
+  }
+  .icon-btn:hover { background: rgba(255,255,255,0.08); color: var(--md-sys-color-on-surface); }
+  .icon-btn .material-icons-round { font-size: 20px; }
+  .top-bar-icon-btn {
+    width: 40px;
+    height: 40px;
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    flex-shrink: 0;
+  }
+  .top-bar-icon-btn:hover { filter: brightness(1.15); background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
+  .expand-arrow {
+    transition: transform 0.2s;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+  .expand-arrow.open { transform: rotate(180deg); }
+
+  .banner-body {
+    display: none;
+    padding: 0 16px 18px;
+    flex-direction: column;
+    gap: 14px;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+  }
+  .banner-body.open { display: flex; }
+
+  .full-preview-wrap {
+    margin-top: 14px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--md-sys-color-surface-container-lowest);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px;
+  }
+  .full-preview-wrap img {
+    width: 100%;
+    max-height: 420px;
+    object-fit: contain;
+    display: block;
+  }
+  .preview-error {
+    padding: 24px;
+    font-size: 13px;
+    color: var(--md-sys-color-on-surface-variant);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .preview-error .material-icons-round { font-size: 28px; opacity: 0.6; }
+
+  .banner-links {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  .link-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--md-sys-color-surface-container-high);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 13px;
+    color: var(--md-sys-color-on-surface);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+  .link-chip:hover {
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    border-color: var(--md-sys-color-secondary-container);
+  }
+  .link-chip .material-icons-round { font-size: 16px; }
+  .link-chip.danger:hover {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+  }
+
+  .field-group { display: flex; flex-direction: column; gap: 4px; }
+  .field-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface-variant);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .mono-line {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12.5px;
+    color: var(--md-sys-color-on-surface-variant);
+    word-break: break-all;
+    background: var(--md-sys-color-surface-container-high);
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+
+  #snackbar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--md-sys-color-inverse-surface);
+    color: var(--md-sys-color-inverse-on-surface);
+    border-radius: 8px;
+    padding: 14px 20px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 999;
+    transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    white-space: nowrap;
+  }
+  #snackbar.show { transform: translateX(-50%) translateY(0); }
+  #snackbar .material-icons-round { font-size: 20px; color: var(--md-sys-color-primary); }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--md-sys-color-on-surface-variant);
+    display: none;
+  }
+  .empty-state .material-icons-round { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+  .empty-state p { font-size: 15px; }
+
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid rgba(var(--theme-accent-rgb),0.3);
+    border-top-color: var(--md-sys-color-primary);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .highlight { background: rgba(var(--theme-accent-rgb),0.25); border-radius: 3px; }
+
+  .skip-note {
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-top: 10px;
+    display: none;
+    align-items: center;
+    gap: 6px;
+  }
+  .skip-note .material-icons-round { font-size: 15px; }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-card {
+    background: var(--md-sys-color-surface-container-high);
+    border-radius: 20px;
+    padding: 24px;
+    width: 100%;
+    max-width: 380px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .modal-header .material-icons-round:first-child { color: var(--md-sys-color-primary); font-size: 20px; }
+  .modal-header h2 {
+    flex: 1;
+    font-family: 'Google Sans Display', sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+  }
+  .modal-body { margin-bottom: 22px; }
+  .color-field-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--md-sys-color-surface-container-highest);
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 8px;
+    transition: border-color 0.2s;
+  }
+  .color-field-wrap:focus-within { border-color: var(--md-sys-color-primary); }
+  .color-field-input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--md-sys-color-on-surface);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 14px;
+    padding: 13px 14px;
+  }
+  .color-field-input::placeholder { color: var(--md-sys-color-on-surface-variant); }
+  .color-field-divider {
+    width: 1px;
+    align-self: stretch;
+    margin: 8px 0;
+    background: var(--md-sys-color-outline-variant);
+  }
+  .color-field-swatch {
+    width: 46px;
+    height: 46px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .color-field-swatch:hover { background: rgba(255,255,255,0.06); }
+  .swatch-dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.55);
+    display: block;
+    transition: background 0.15s;
+  }
+  .color-picker-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+    border: none;
+    padding: 0;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <span class="material-icons-round">flag</span>
+  <div style="flex:1;">
+    <h1>FluxerBanners Moderation</h1>
+    <div class="sub">Banner Management</div>
+  </div>
+  <span class="badge" id="bannerCount">0 banners</span>
+  <button class="icon-btn top-bar-icon-btn" onclick="openThemeModal()" title="Theme" aria-label="Theme">
+    <span class="material-icons-round">palette</span>
+  </button>
+</div>
+
+<div class="modal-overlay" id="themeOverlay" onclick="closeThemeModalOnOverlay(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="material-icons-round">palette</span>
+      <h2>Theme</h2>
+      <button class="icon-btn" onclick="closeThemeModal()" title="Close">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field-label">Accent color</div>
+      <div class="color-field-wrap">
+        <input type="text" id="themeHexInput" class="color-field-input"
+          placeholder="#98064F" maxlength="7" autocomplete="off"
+          aria-label="Color value" oninput="onHexInput(this.value)">
+        <div class="color-field-divider"></div>
+        <button class="color-field-swatch" type="button" aria-label="Open color picker"
+          onclick="document.getElementById('themeColorPicker').click()">
+          <span class="swatch-dot" id="themeSwatchDot"></span>
+        </button>
+        <input type="color" id="themeColorPicker" class="color-picker-hidden"
+          value="#98064F" oninput="onPickerInput(this.value)">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outlined" onclick="resetThemeDefault()">
+        <span class="material-icons-round">restart_alt</span>
+        Reset to Default
+      </button>
+      <button class="btn btn-filled" onclick="closeThemeModal()">
+        <span class="material-icons-round">check</span>
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <div class="card">
+    <div class="card-title">
+      <span class="material-icons-round">cloud_sync</span>
+      Scan Repository
+    </div>
+    <div class="url-row">
+      <div class="url-input-wrap">
+        <span class="material-icons-round">link</span>
+        <input class="field" id="apiUrlInput" type="text"
+          value="https://codeberg.org/api/v1/repos/DPRS/BannerDatabase/contents/banners?ref=main"
+          oninput="saveUrlToStorage()">
+      </div>
+      <div class="spinner" id="spinner"></div>
+      <button class="btn btn-filled" onclick="loadBanners()">
+        <span class="material-icons-round">refresh</span>
+        Scan Folder
+      </button>
+    </div>
+    <div class="skip-note" id="skipNote">
+      <span class="material-icons-round">info</span>
+      <span id="skipNoteText"></span>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px;">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="material-icons-round">search</span>
+        <input id="searchInput" type="text" placeholder="Search by username..." oninput="applySearch()">
+      </div>
+      <span class="count-label" id="filterCount"></span>
+    </div>
+  </div>
+
+  <!-- Banner List -->
+  <div id="bannerList"></div>
+  <div class="empty-state" id="emptyState">
+    <div class="material-icons-round">image_search</div>
+    <p id="emptyMsg">Scan the folder above to load banners.</p>
+  </div>
+
+</div>
+
+<div id="snackbar">
+  <span class="material-icons-round">check_circle</span>
+  <span id="snackMsg">Done!</span>
+</div>
+
+<script>
+const DEFAULT_THEME = '#98064F';
+
+function normalizeHex(input) {
+  if (!input) return null;
+  let v = input.trim();
+  if (v[0] !== '#') v = '#' + v;
+  const shortMatch = /^#([0-9a-f]{3})$/i.exec(v);
+  if (shortMatch) {
+    const c = shortMatch[1];
+    v = '#' + c[0]+c[0] + c[1]+c[1] + c[2]+c[2];
+  }
+  return /^#[0-9a-f]{6}$/i.test(v) ? v.toUpperCase() : null;
+}
+
+function hexToRgb(hex) {
+  const v = hex.replace('#', '');
+  return {
+    r: parseInt(v.substring(0,2), 16),
+    g: parseInt(v.substring(2,4), 16),
+    b: parseInt(v.substring(4,6), 16)
+  };
+}
+
+function hexToHsl(hex) {
+  let { r, g, b } = hexToRgb(hex);
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  let h, s, l = (max + min) / 2;
+  if (max === min) { h = 0; s = 0; }
+  else {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      default: h = (r - g) / d + 4; break;
+    }
+    h *= 60;
+  }
+  return { h, s: s * 100, l: l * 100 };
+}
+
+function hslToHex(h, s, l) {
+  h = ((h % 360) + 360) % 360;
+  s = Math.max(0, Math.min(100, s)) / 100;
+  l = Math.max(0, Math.min(100, l)) / 100;
+  const c = (1 - Math.abs(2*l - 1)) * s;
+  const x = c * (1 - Math.abs((h/60) % 2 - 1));
+  const m = l - c/2;
+  let r=0, g=0, b=0;
+  if (h < 60)       { r=c; g=x; b=0; }
+  else if (h < 120) { r=x; g=c; b=0; }
+  else if (h < 180) { r=0; g=c; b=x; }
+  else if (h < 240) { r=0; g=x; b=c; }
+  else if (h < 300) { r=x; g=0; b=c; }
+  else              { r=c; g=0; b=x; }
+  const toHex = v => Math.round((v + m) * 255).toString(16).padStart(2, '0');
+  return '#' + toHex(r) + toHex(g) + toHex(b);
+}
+
+function applyTheme(hexInput, options) {
+  const opts = options || {};
+  const base = normalizeHex(hexInput);
+  if (!base) return false;
+
+  const { h, s } = hexToHsl(base);
+  const hue = isNaN(h) ? 0 : h;
+  const sat = Math.min(85, isNaN(s) ? 0 : s);
+  const secHue = (hue + 10) % 360;
+  const terHue = (hue + 130) % 360;
+  const root = document.documentElement.style;
+  const set = (name, value) => root.setProperty(name, value);
+
+  const primary = hslToHex(hue, Math.min(90, sat + 15), 80);
+  set('--md-sys-color-primary', primary);
+  set('--md-sys-color-on-primary', hslToHex(hue, sat, 20));
+  set('--md-sys-color-primary-container', base);
+  set('--md-sys-color-on-primary-container', hslToHex(hue, Math.min(90, sat + 10), 92));
+  set('--md-sys-color-secondary', hslToHex(secHue, Math.max(20, sat - 30), 80));
+  set('--md-sys-color-on-secondary', hslToHex(secHue, Math.max(20, sat - 25), 22));
+  set('--md-sys-color-secondary-container', hslToHex(secHue, Math.max(20, sat - 25), 30));
+  set('--md-sys-color-on-secondary-container', hslToHex(secHue, Math.max(30, sat - 15), 90));
+  set('--md-sys-color-tertiary', hslToHex(terHue, 45, 70));
+  set('--md-sys-color-on-tertiary', hslToHex(terHue, 40, 16));
+  set('--md-sys-color-tertiary-container', hslToHex(terHue, 35, 26));
+  set('--md-sys-color-on-tertiary-container', hslToHex(terHue, 45, 88));
+  set('--md-sys-color-background', hslToHex(hue, 22, 8));
+  set('--md-sys-color-on-background', hslToHex(hue, 22, 92));
+  set('--md-sys-color-surface', hslToHex(hue, 22, 8));
+  set('--md-sys-color-on-surface', hslToHex(hue, 22, 92));
+  set('--md-sys-color-surface-variant', hslToHex(hue, 12, 30));
+  set('--md-sys-color-on-surface-variant', hslToHex(hue, 14, 82));
+  set('--md-sys-color-outline', hslToHex(hue, 10, 60));
+  set('--md-sys-color-outline-variant', hslToHex(hue, 12, 30));
+  set('--md-sys-color-surface-container-lowest', hslToHex(hue, 20, 6));
+  set('--md-sys-color-surface-container-low', hslToHex(hue, 18, 11));
+  set('--md-sys-color-surface-container', hslToHex(hue, 16, 13));
+  set('--md-sys-color-surface-container-high', hslToHex(hue, 15, 17));
+  set('--md-sys-color-surface-container-highest', hslToHex(hue, 14, 21));
+  set('--md-sys-color-inverse-surface', hslToHex(hue, 22, 92));
+  set('--md-sys-color-inverse-on-surface', hslToHex(hue, 20, 20));
+  set('--md-sys-color-inverse-primary', base);
+
+  const rgb = hexToRgb(primary);
+  set('--theme-accent-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+
+  const hexField = document.getElementById('themeHexInput');
+  const picker = document.getElementById('themeColorPicker');
+  const dot = document.getElementById('themeSwatchDot');
+  if (hexField && document.activeElement !== hexField) hexField.value = base;
+  if (picker) picker.value = base;
+  if (dot) dot.style.background = base;
+
+  if (opts.save !== false) {
+    try { localStorage.setItem('theme', base); } catch (e) { console.warn('Could not save theme:', e); }
+  }
+  return true;
+}
+
+function onHexInput(value) {
+  applyTheme(value);
+}
+function onPickerInput(value) {
+  applyTheme(value);
+}
+function resetThemeDefault() {
+  applyTheme(DEFAULT_THEME);
+}
+function openThemeModal() {
+  document.getElementById('themeOverlay').classList.add('open');
+}
+function closeThemeModal() {
+  document.getElementById('themeOverlay').classList.remove('open');
+}
+function closeThemeModalOnOverlay(e) {
+  if (e.target.id === 'themeOverlay') closeThemeModal();
+}
+
+(function initTheme() {
+  let saved = null;
+  try { saved = localStorage.getItem('theme'); } catch (e) {}
+  applyTheme(saved || DEFAULT_THEME, { save: false });
+})();
+
+const REPO_OWNER = 'DPRS';
+const REPO_NAME  = 'BannerDatabase';
+const REPO_BRANCH = 'main';
+
+const FILENAME_RE = /^(.+#\d{3,6})\.([a-zA-Z0-9]+)$/;
+
+let banners = [];
+let skippedCount = 0;
+let searchQuery = '';
+let snackTimer = null;
+let lazyObserver = null;
+
+function setupLazyLoading() {
+  if (lazyObserver) lazyObserver.disconnect();
+  lazyObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const img = entry.target;
+      if (entry.isIntersecting) {
+        if (img.dataset.src && img.getAttribute('src') !== img.dataset.src) {
+          img.src = img.dataset.src;
+        }
+      } else if (img.getAttribute('src')) {
+
+        img.removeAttribute('src');
+      }
+    });
+  }, { root: null, rootMargin: '400px 0px', threshold: 0 });
+
+  document.querySelectorAll('.lazy-img').forEach(img => lazyObserver.observe(img));
+}
+
+function rawUrl(filename) {
+  return `https://codeberg.org/${REPO_OWNER}/${REPO_NAME}/raw/branch/${REPO_BRANCH}/banners/${encodeURIComponent(filename)}`;
+}
+function srcUrl(filename) {
+  return `https://codeberg.org/${REPO_OWNER}/${REPO_NAME}/src/branch/${REPO_BRANCH}/banners/${encodeURIComponent(filename)}`;
+}
+
+async function loadBanners() {
+  const apiUrl = document.getElementById('apiUrlInput').value.trim();
+  if (!apiUrl) { showSnack('Please enter the Codeberg API URL', 'error'); return; }
+
+  const spinner = document.getElementById('spinner');
+  spinner.style.display = 'block';
+
+  try {
+    const res = await fetch(apiUrl, { headers: { 'Accept': 'application/json' } });
+
+    if (!res.ok) {
+      if (res.status === 403 || res.status === 429)
+        throw new Error('Rate-limited by the Codeberg API, try again in a moment');
+      if (res.status === 404)
+        throw new Error('Folder not found, check the repo, branch, and path');
+      throw new Error(`API error ${res.status}`);
+    }
+
+    const items = await res.json();
+    if (!Array.isArray(items)) throw new Error('Unexpected response, expected a directory listing array');
+
+    const files = items.filter(i => i.type === 'file');
+    skippedCount = 0;
+
+    banners = [];
+    files.forEach(f => {
+      const m = f.name.match(FILENAME_RE);
+      if (!m) { skippedCount++; return; }
+      banners.push({
+        username: m[1],
+        filename: f.name,
+        ext: m[2],
+        size: f.size || 0,
+        sha: f.sha || ''
+      });
+    });
+
+    banners.sort((a, b) => a.username.localeCompare(b.username));
+
+    renderAll();
+    showSnack(`Scanned folder, found ${banners.length} banner${banners.length === 1 ? '' : 's'}`);
+
+    const skipNote = document.getElementById('skipNote');
+    if (skippedCount > 0) {
+      document.getElementById('skipNoteText').textContent =
+        `${skippedCount} file${skippedCount === 1 ? '' : 's'} inside the folder didn't match the Username Requirements. So ${skippedCount === 1 ? 'it has' : 'they have'} been ignored.`;
+      skipNote.style.display = 'flex';
+    } else {
+      skipNote.style.display = 'none';
+    }
+  } catch (e) {
+    showSnack('Failed to scan: ' + e.message, 'error');
+    console.error(e);
+  } finally {
+    spinner.style.display = 'none';
+  }
+}
+
+function renderAll() {
+  const q = searchQuery.toLowerCase();
+  const list = document.getElementById('bannerList');
+  const empty = document.getElementById('emptyState');
+  list.innerHTML = '';
+
+  const filtered = banners.filter(b => !q || b.username.toLowerCase().includes(q));
+
+  updateCounts(filtered.length);
+
+  if (filtered.length === 0) {
+    empty.style.display = 'block';
+    document.getElementById('emptyMsg').textContent =
+      banners.length === 0
+        ? 'Scan the folder above to load banners.'
+        : 'No usernames match your search.';
+    return;
+  }
+
+  empty.style.display = 'none';
+  filtered.forEach(banner => {
+    const realIdx = banners.indexOf(banner);
+    list.appendChild(buildCard(banner, realIdx));
+  });
+  setupLazyLoading();
+}
+
+function hl(text, q) {
+  if (!q || !text) return escHtml(text || '');
+  const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+  return escHtml(text).replace(re, '<mark class="highlight">$1</mark>');
+}
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtSize(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+}
+
+function buildCard(banner, idx) {
+  const q = searchQuery.toLowerCase();
+  const card = document.createElement('div');
+  card.className = 'banner-card';
+  card.id = 'card-' + idx;
+  const thumb = rawUrl(banner.filename);
+
+  card.innerHTML = `
+    <div class="banner-header" onclick="toggleCard(${idx})">
+      <div class="banner-thumb" id="thumbwrap-${idx}">
+        <img class="lazy-img" data-src="${thumb}" onerror="thumbFailed(${idx})">
+      </div>
+      <div class="banner-meta">
+        <div class="banner-name">${hl(banner.username, q)}</div>
+        <div class="banner-file">${escHtml(banner.filename)}${banner.size ? ' · ' + fmtSize(banner.size) : ''}</div>
+      </div>
+      <div class="banner-actions" onclick="event.stopPropagation()">
+        <button class="icon-btn" title="Copy raw image link" onclick="copyLink('${escJs(thumb)}')">
+          <span class="material-icons-round">content_copy</span>
+        </button>
+      </div>
+      <span class="material-icons-round expand-arrow" id="arrow-${idx}">expand_more</span>
+    </div>
+    <div class="banner-body" id="body-${idx}">
+      <div class="full-preview-wrap" id="previewwrap-${idx}">
+        <img class="lazy-img" data-src="${thumb}" onerror="fullPreviewFailed(${idx})">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Raw image URL</div>
+        <div class="mono-line">${escHtml(thumb)}</div>
+      </div>
+      <div class="banner-links">
+        <a class="link-chip" href="${srcUrl(banner.filename)}" target="_blank" rel="noopener">
+          <span class="material-icons-round">open_in_new</span>
+          Go to file
+        </a>
+        <a class="link-chip" href="${thumb}" target="_blank" rel="noopener">
+          <span class="material-icons-round">visibility</span>
+          Open image
+        </a>
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+function thumbFailed(idx) {
+  const wrap = document.getElementById('thumbwrap-' + idx);
+  if (wrap) wrap.innerHTML = '<span class="material-icons-round">broken_image</span>';
+}
+function fullPreviewFailed(idx) {
+  const wrap = document.getElementById('previewwrap-' + idx);
+  if (wrap) wrap.innerHTML = '<div class="preview-error"><span class="material-icons-round">broken_image</span>Couldn\'t load this image</div>';
+}
+
+function toggleCard(idx) {
+  const body  = document.getElementById('body-' + idx);
+  const arrow = document.getElementById('arrow-' + idx);
+  const card  = document.getElementById('card-' + idx);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  arrow.classList.toggle('open', !isOpen);
+  card.classList.toggle('editing', !isOpen);
+}
+
+function applySearch() {
+  searchQuery = document.getElementById('searchInput').value;
+  renderAll();
+}
+
+function updateCounts(filtered) {
+  const total = banners.length;
+  document.getElementById('bannerCount').textContent = total === 1 ? '1 banner' : total + ' banners';
+  const fc = document.getElementById('filterCount');
+  if (searchQuery && filtered !== total) {
+    fc.textContent = `Showing ${filtered} of ${total}`;
+  } else {
+    fc.textContent = total > 0 ? `${total} banners loaded` : '';
+  }
+}
+
+function escJs(s) { return s.replace(/'/g, "\\'"); }
+
+async function copyLink(url) {
+  try {
+    await navigator.clipboard.writeText(url);
+    showSnack('Link copied to clipboard!');
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showSnack('Link copied to clipboard!');
+  }
+}
+
+function showSnack(msg, type) {
+  const snack = document.getElementById('snackbar');
+  const icon  = snack.querySelector('.material-icons-round');
+  document.getElementById('snackMsg').textContent = msg;
+  icon.textContent = type === 'error' ? 'error' : 'check_circle';
+  icon.style.color = type === 'error'
+    ? 'var(--md-sys-color-error)'
+    : 'var(--md-sys-color-primary)';
+  snack.classList.add('show');
+  clearTimeout(snackTimer);
+  snackTimer = setTimeout(() => snack.classList.remove('show'), 3000);
+}
+
+function saveUrlToStorage() {
+  try {
+    localStorage.setItem('url', document.getElementById('apiUrlInput').value);
+  } catch (e) {
+
+    console.warn('Could not save URL to localStorage:', e);
+  }
+}
+
+function restoreUrlFromStorage() {
+  try {
+    const saved = localStorage.getItem('url');
+    if (saved) document.getElementById('apiUrlInput').value = saved;
+  } catch (e) {
+    console.warn('Could not read URL from localStorage:', e);
+  }
+}
+
+restoreUrlFromStorage();
+setTimeout(loadBanners, 1000);
+</script>
+
+</body>
+</html>
