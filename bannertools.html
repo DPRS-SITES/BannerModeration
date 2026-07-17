@@ -196,6 +196,11 @@
     color: var(--md-sys-color-primary);
   }
   .btn-outlined:hover { background: rgba(var(--theme-accent-rgb),0.08); }
+  .btn-danger {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+  }
+  .btn-danger:hover { filter: brightness(1.1); box-shadow: 0 2px 8px rgba(242,184,181,0.3); }
   .btn:disabled { opacity: 0.38; cursor: not-allowed; }
 
   .toolbar {
@@ -321,6 +326,7 @@
     transition: background 0.15s, color 0.15s;
   }
   .icon-btn:hover { background: rgba(255,255,255,0.08); color: var(--md-sys-color-on-surface); }
+  .icon-btn.delete:hover { background: rgba(242,184,181,0.12); color: var(--md-sys-color-error); }
   .icon-btn .material-icons-round { font-size: 20px; }
   .top-bar-icon-btn {
     width: 40px;
@@ -461,6 +467,7 @@
     display: none;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+  .spin-icon { animation: spin 0.8s linear infinite; display: inline-block; }
 
   .highlight { background: rgba(var(--theme-accent-rgb),0.25); border-radius: 3px; }
 
@@ -508,7 +515,21 @@
     font-weight: 500;
     color: var(--md-sys-color-on-surface);
   }
-  .modal-body { margin-bottom: 22px; }
+  .modal-body { margin-bottom: 22px; display: flex; flex-direction: column; gap: 16px; }
+  .modal-input {
+    width: 100%;
+    background: var(--md-sys-color-surface-container-highest);
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: 12px;
+    color: var(--md-sys-color-on-surface);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 14px;
+    padding: 13px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .modal-input:focus { border-color: var(--md-sys-color-primary); }
+  .modal-input::placeholder { color: var(--md-sys-color-on-surface-variant); font-family: 'Google Sans', sans-serif; }
   .color-field-wrap {
     display: flex;
     align-items: center;
@@ -574,6 +595,35 @@
     justify-content: flex-end;
     flex-wrap: wrap;
   }
+  .file-drop {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--md-sys-color-surface-container-highest);
+    border: 1px dashed var(--md-sys-color-outline);
+    border-radius: 12px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .file-drop:hover { border-color: var(--md-sys-color-primary); background: var(--md-sys-color-surface-container-high); }
+  .file-drop-preview {
+    width: 48px; height: 48px;
+    border-radius: 10px;
+    background: var(--md-sys-color-surface-container-high);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+  .file-drop-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .file-drop-text {
+    font-size: 13px;
+    color: var(--md-sys-color-on-surface-variant);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 </style>
 </head>
 <body>
@@ -627,6 +677,71 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="uploadOverlay" onclick="closeUploadModalOnOverlay(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="material-icons-round">upload</span>
+      <h2>Upload Banner</h2>
+      <button class="icon-btn" onclick="closeUploadModal()" title="Close">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <div class="field-label">Username</div>
+        <input type="text" id="uploadUsernameInput" class="modal-input"
+          placeholder="username#0000" autocomplete="off" oninput="updateUploadButtonState()">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Image file</div>
+        <div class="file-drop" onclick="document.getElementById('uploadFileInput').click()">
+          <div class="file-drop-preview" id="uploadFilePreview">
+            <span class="material-icons-round">image</span>
+          </div>
+          <div class="file-drop-text" id="uploadFileText">Click to choose an image</div>
+        </div>
+        <input type="file" id="uploadFileInput" accept="image/*" class="color-picker-hidden"
+          onchange="onUploadFileChange(this.files[0])">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outlined" onclick="closeUploadModal()">
+        <span class="material-icons-round">close</span>
+        Cancel
+      </button>
+      <button class="btn btn-filled" id="uploadSubmitBtn" onclick="uploadBanner()" disabled>
+        <span class="material-icons-round">cloud_upload</span>
+        Upload
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="deleteOverlay" onclick="closeDeleteModalOnOverlay(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="material-icons-round" style="color: var(--md-sys-color-error);">delete</span>
+      <h2>Delete Banner</h2>
+      <button class="icon-btn" onclick="closeDeleteModal()" title="Close">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p id="deleteModalText" style="font-size:14px; color:var(--md-sys-color-on-surface-variant); line-height:1.5;"></p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outlined" onclick="closeDeleteModal()">
+        <span class="material-icons-round">close</span>
+        Cancel
+      </button>
+      <button class="btn btn-danger" onclick="confirmDeleteBanner()">
+        <span class="material-icons-round">delete</span>
+        Delete
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="layout">
 
   <div class="card">
@@ -650,6 +765,25 @@
     <div class="skip-note" id="skipNote">
       <span class="material-icons-round">info</span>
       <span id="skipNoteText"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span class="material-icons-round">key</span>
+      Authentication
+    </div>
+    <div class="url-row">
+      <div class="url-input-wrap">
+        <span class="material-icons-round">lock</span>
+        <input class="field" id="tokenInput" type="password"
+          placeholder="Codeberg auth token" autocomplete="off"
+          oninput="saveTokenToStorage()">
+      </div>
+      <button class="btn btn-filled" onclick="openUploadModal()">
+        <span class="material-icons-round">upload</span>
+        Upload Banner
+      </button>
     </div>
   </div>
 
@@ -825,14 +959,17 @@ function closeThemeModalOnOverlay(e) {
 const REPO_OWNER = 'DPRS';
 const REPO_NAME  = 'BannerDatabase';
 const REPO_BRANCH = 'main';
+const CONTENTS_BASE = `https://codeberg.org/api/v1/repos/${REPO_OWNER}/${REPO_NAME}/contents/banners`;
 
 const FILENAME_RE = /^(.+#\d{3,6})\.([a-zA-Z0-9]+)$/;
+const USERNAME_RE = /^.+#\d{3,6}$/;
 
 let banners = [];
 let skippedCount = 0;
 let searchQuery = '';
 let snackTimer = null;
 let lazyObserver = null;
+let uploadSelectedFile = null;
 
 function setupLazyLoading() {
   if (lazyObserver) lazyObserver.disconnect();
@@ -980,6 +1117,9 @@ function buildCard(banner, idx) {
         <button class="icon-btn" title="Copy raw image link" onclick="copyLink('${escJs(thumb)}')">
           <span class="material-icons-round">content_copy</span>
         </button>
+        <button class="icon-btn delete" title="Delete banner" onclick="openDeleteModal(${idx})">
+          <span class="material-icons-round">delete</span>
+        </button>
       </div>
       <span class="material-icons-round expand-arrow" id="arrow-${idx}">expand_more</span>
     </div>
@@ -1089,7 +1229,269 @@ function restoreUrlFromStorage() {
   }
 }
 
+function saveTokenToStorage() {
+  try {
+    localStorage.setItem('token', document.getElementById('tokenInput').value);
+  } catch (e) {
+    console.warn('Could not save token to localStorage:', e);
+  }
+}
+
+function restoreTokenFromStorage() {
+  try {
+    const saved = localStorage.getItem('token');
+    if (saved) document.getElementById('tokenInput').value = saved;
+  } catch (e) {
+    console.warn('Could not read token from localStorage:', e);
+  }
+}
+
+function getToken() {
+  return document.getElementById('tokenInput').value.trim();
+}
+
+function openUploadModal() {
+  document.getElementById('uploadOverlay').classList.add('open');
+}
+function closeUploadModal() {
+  document.getElementById('uploadOverlay').classList.remove('open');
+  resetUploadForm();
+}
+function closeUploadModalOnOverlay(e) {
+  if (e.target.id === 'uploadOverlay') closeUploadModal();
+}
+
+function onUploadFileChange(file) {
+  uploadSelectedFile = file || null;
+  const preview = document.getElementById('uploadFilePreview');
+  const text = document.getElementById('uploadFileText');
+
+  if (file) {
+    text.textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = () => {
+      preview.innerHTML = `<img src="${reader.result}" alt="">`;
+    };
+    reader.readAsDataURL(file);
+  } else {
+    text.textContent = 'Click to choose an image';
+    preview.innerHTML = '<span class="material-icons-round">image</span>';
+  }
+  updateUploadButtonState();
+}
+
+function updateUploadButtonState() {
+  const username = document.getElementById('uploadUsernameInput').value.trim();
+  const valid = USERNAME_RE.test(username) && !!uploadSelectedFile;
+  document.getElementById('uploadSubmitBtn').disabled = !valid;
+}
+
+function resetUploadForm() {
+  document.getElementById('uploadUsernameInput').value = '';
+  document.getElementById('uploadFileInput').value = '';
+  uploadSelectedFile = null;
+  document.getElementById('uploadFileText').textContent = 'Click to choose an image';
+  document.getElementById('uploadFilePreview').innerHTML = '<span class="material-icons-round">image</span>';
+  updateUploadButtonState();
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      const idx = result.indexOf(',');
+      resolve(idx >= 0 ? result.slice(idx + 1) : result);
+    };
+    reader.onerror = () => reject(new Error("Could not read the selected file"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function extensionFromFile(file) {
+  const nameMatch = /\.([a-zA-Z0-9]+)$/.exec(file.name || '');
+  if (nameMatch) return nameMatch[1].toLowerCase();
+  const mimeMap = {
+    'image/png': 'png',
+    'image/jpeg': 'jpg',
+    'image/gif': 'gif',
+    'image/webp': 'webp',
+    'image/apng': 'apng',
+    'image/avif': 'avif',
+    'image/svg+xml': 'svg'
+  };
+  return mimeMap[file.type] || null;
+}
+
+async function getFileSha(filename) {
+  const token = getToken();
+  const headers = token ? { 'Authorization': `token ${token}` } : {};
+  const res = await fetch(`${CONTENTS_BASE}/${encodeURIComponent(filename)}?ref=${REPO_BRANCH}`, { headers });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Couldn't check the existing file (HTTP ${res.status})`);
+  const json = await res.json();
+  return json.sha || null;
+}
+
+async function uploadBanner() {
+  const token = getToken();
+  const username = document.getElementById('uploadUsernameInput').value.trim();
+  const file = uploadSelectedFile;
+
+  if (!token) { showSnack('Enter your Codeberg auth token first', 'error'); return; }
+  if (!USERNAME_RE.test(username)) { showSnack('Username must look like username#0000', 'error'); return; }
+  if (!file) { showSnack('Choose an image file to upload', 'error'); return; }
+
+  const ext = extensionFromFile(file);
+  if (!ext) { showSnack("Couldn't determine the file's extension", 'error'); return; }
+
+  const targetFilename = `${username}.${ext}`;
+  const submitBtn = document.getElementById('uploadSubmitBtn');
+  const submitIcon = submitBtn.querySelector('.material-icons-round');
+  submitBtn.disabled = true;
+  submitIcon.classList.add('spin-icon');
+  submitIcon.textContent = 'autorenew';
+
+  try {
+    const base64 = await fileToBase64(file);
+    const targetSha = await getFileSha(targetFilename);
+
+    const putRes = await fetch(`${CONTENTS_BASE}/${encodeURIComponent(targetFilename)}`, {
+      method: targetSha ? 'PUT' : 'POST',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        content: base64,
+        message: `Upload banner for ${username}`,
+        branch: REPO_BRANCH,
+        ...(targetSha ? { sha: targetSha } : {})
+      })
+    });
+
+    if (!putRes.ok) {
+      const errJson = await putRes.json().catch(() => null);
+      throw new Error((errJson && errJson.message) || `Upload failed (HTTP ${putRes.status})`);
+    }
+
+    const existing = banners.find(b => b.username === username);
+    if (existing && existing.filename !== targetFilename) {
+      try {
+        const oldSha = existing.sha || await getFileSha(existing.filename);
+        if (oldSha) {
+          await fetch(`${CONTENTS_BASE}/${encodeURIComponent(existing.filename)}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `token ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              message: `Remove old banner file for ${username}`,
+              sha: oldSha,
+              branch: REPO_BRANCH
+            })
+          });
+        }
+      } catch (cleanupErr) {
+        console.warn('Old banner file could not be removed automatically:', cleanupErr);
+      }
+    }
+
+    showSnack(`Uploaded banner for ${username}`);
+    closeUploadModal();
+    await loadBanners();
+  } catch (e) {
+    showSnack('Upload failed: ' + e.message, 'error');
+    console.error(e);
+  } finally {
+    submitIcon.classList.remove('spin-icon');
+    submitIcon.textContent = 'cloud_upload';
+    updateUploadButtonState();
+  }
+}
+
+let pendingDeleteIdx = null;
+
+function openDeleteModal(idx) {
+  const banner = banners[idx];
+  if (!banner) return;
+  pendingDeleteIdx = idx;
+  document.getElementById('deleteModalText').textContent =
+    `Delete the banner for ${banner.username}? This permanently removes it from the repository.`;
+  document.getElementById('deleteOverlay').classList.add('open');
+}
+function closeDeleteModal() {
+  document.getElementById('deleteOverlay').classList.remove('open');
+  pendingDeleteIdx = null;
+}
+function closeDeleteModalOnOverlay(e) {
+  if (e.target.id === 'deleteOverlay') closeDeleteModal();
+}
+async function confirmDeleteBanner() {
+  if (pendingDeleteIdx === null) return;
+  const idx = pendingDeleteIdx;
+
+  const deleteBtn = document.querySelector('#deleteOverlay .btn-danger');
+  const cancelBtn = document.querySelector('#deleteOverlay .btn-outlined');
+  const deleteIcon = deleteBtn.querySelector('.material-icons-round');
+
+  deleteBtn.disabled = true;
+  cancelBtn.disabled = true;
+  deleteIcon.classList.add('spin-icon');
+  deleteIcon.textContent = 'autorenew';
+
+  const success = await deleteBanner(idx);
+
+  deleteBtn.disabled = false;
+  cancelBtn.disabled = false;
+  deleteIcon.classList.remove('spin-icon');
+  deleteIcon.textContent = 'delete';
+
+  if (success) closeDeleteModal();
+}
+
+async function deleteBanner(idx) {
+  const banner = banners[idx];
+  if (!banner) return false;
+
+  const token = getToken();
+  if (!token) { showSnack('Enter your Codeberg auth token first', 'error'); return false; }
+
+  try {
+    const sha = banner.sha || await getFileSha(banner.filename);
+    if (!sha) throw new Error('Could not find that file in the repository');
+
+    const res = await fetch(`${CONTENTS_BASE}/${encodeURIComponent(banner.filename)}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: `Delete banner for ${banner.username}`,
+        sha: sha,
+        branch: REPO_BRANCH
+      })
+    });
+
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => null);
+      throw new Error((errJson && errJson.message) || `Delete failed (HTTP ${res.status})`);
+    }
+
+    showSnack(`Deleted banner for ${banner.username}`);
+    await loadBanners();
+    return true;
+  } catch (e) {
+    showSnack('Delete failed: ' + e.message, 'error');
+    console.error(e);
+    return false;
+  }
+}
+
 restoreUrlFromStorage();
+restoreTokenFromStorage();
 setTimeout(loadBanners, 1000);
 </script>
 
