@@ -960,6 +960,7 @@ const REPO_OWNER = 'DPRS';
 const REPO_NAME  = 'BannerDatabase';
 const REPO_BRANCH = 'main';
 const CONTENTS_BASE = `https://codeberg.org/api/v1/repos/${REPO_OWNER}/${REPO_NAME}/contents/banners`;
+const JSON_CONTENTS_URL = `https://codeberg.org/api/v1/repos/${REPO_OWNER}/${REPO_NAME}/contents/banners.json`;
 
 const FILENAME_RE = /^(.+#\d{3,6})\.([a-zA-Z0-9]+)$/;
 const USERNAME_RE = /^.+#\d{3,6}$/;
@@ -1333,6 +1334,69 @@ async function getFileSha(filename) {
   return json.sha || null;
 }
 
+function base64EncodeUtf8(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function base64DecodeUtf8(b64) {
+  return decodeURIComponent(escape(atob(b64.replace(/\s/g, ''))));
+}
+
+async function fetchBannersJson(token) {
+  const headers = token ? { 'Authorization': `token ${token}` } : {};
+  const res = await fetch(`${JSON_CONTENTS_URL}?ref=${REPO_BRANCH}`, { headers });
+
+  if (res.status === 404) {
+    return { data: {}, sha: null };
+  }
+  if (!res.ok) {
+    const errJson = await res.json().catch(() => null);
+    throw new Error((errJson && errJson.message) || `Couldn't read banners.json (HTTP ${res.status})`);
+  }
+
+  const json = await res.json();
+  let data = {};
+  try {
+    data = JSON.parse(base64DecodeUtf8(json.content || ''));
+  } catch (e) {
+    throw new Error('banners.json contains invalid JSON');
+  }
+  return { data, sha: json.sha || null };
+}
+
+async function writeBannersJson(data, sha, token, message) {
+  const res = await fetch(JSON_CONTENTS_URL, {
+    method: sha ? 'PUT' : 'POST',
+    headers: {
+      'Authorization': `token ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      content: base64EncodeUtf8(JSON.stringify(data, null, 2)),
+      message: message,
+      branch: REPO_BRANCH,
+      ...(sha ? { sha } : {})
+    })
+  });
+
+  if (!res.ok) {
+    const errJson = await res.json().catch(() => null);
+    throw new Error((errJson && errJson.message) || `Couldn't update banners.json (HTTP ${res.status})`);
+  }
+}
+
+async function addToBannersJson(username, url, token) {
+  const { data, sha } = await fetchBannersJson(token);
+  data[username] = url;
+  await writeBannersJson(data, sha, token, `Add ${username} to banners.json`);
+}
+
+async function removeFromBannersJson(username, token) {
+  const { data, sha } = await fetchBannersJson(token);
+  if (!(username in data)) return;
+  delete data[username];
+  await writeBannersJson(data, sha, token, `Remove ${username} from banners.json`);
+}
+
 async function uploadBanner() {
   const token = getToken();
   const username = document.getElementById('uploadUsernameInput').value.trim();
@@ -1398,7 +1462,19 @@ async function uploadBanner() {
       }
     }
 
-    showSnack(`Uploaded banner for ${username}`);
+    let jsonSynced = true;
+    try {
+      await addToBannersJson(username, rawUrl(targetFilename), token);
+    } catch (jsonErr) {
+      jsonSynced = false;
+      console.error('banners.json sync failed after upload:', jsonErr);
+    }
+
+    if (jsonSynced) {
+      showSnack(`Uploaded banner for ${username} and synced banners.json`);
+    } else {
+      showSnack(`Uploaded banner for ${username}, but banners.json sync failed, update it manually`, 'error');
+    }
     closeUploadModal();
     await loadBanners();
   } catch (e) {
@@ -1480,7 +1556,19 @@ async function deleteBanner(idx) {
       throw new Error((errJson && errJson.message) || `Delete failed (HTTP ${res.status})`);
     }
 
-    showSnack(`Deleted banner for ${banner.username}`);
+    let jsonSynced = true;
+    try {
+      await removeFromBannersJson(banner.username, token);
+    } catch (jsonErr) {
+      jsonSynced = false;
+      console.error('banners.json sync failed after delete:', jsonErr);
+    }
+
+    if (jsonSynced) {
+      showSnack(`Deleted banner for ${banner.username} and synced banners.json`);
+    } else {
+      showSnack(`Deleted banner for ${banner.username}, but banners.json sync failed, update it manually`, 'error');
+    }
     await loadBanners();
     return true;
   } catch (e) {
