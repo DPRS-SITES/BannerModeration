@@ -688,9 +688,9 @@
     </div>
     <div class="modal-body">
       <div class="field-group">
-        <div class="field-label">Username</div>
+        <div class="field-label">USERID</div>
         <input type="text" id="uploadUsernameInput" class="modal-input"
-          placeholder="username#0000" autocomplete="off" oninput="updateUploadButtonState()">
+          placeholder="0000000000000000000" autocomplete="off" oninput="updateUploadButtonState()">
       </div>
       <div class="field-group">
         <div class="field-label">Image file</div>
@@ -791,7 +791,7 @@
     <div class="toolbar">
       <div class="search-wrap">
         <span class="material-icons-round">search</span>
-        <input id="searchInput" type="text" placeholder="Search by username..." oninput="applySearch()">
+        <input id="searchInput" type="text" placeholder="Search by User ID..." oninput="applySearch()">
       </div>
       <span class="count-label" id="filterCount"></span>
     </div>
@@ -962,8 +962,8 @@ const REPO_BRANCH = 'main';
 const CONTENTS_BASE = `https://codeberg.org/api/v1/repos/${REPO_OWNER}/${REPO_NAME}/contents/banners`;
 const JSON_CONTENTS_URL = `https://codeberg.org/api/v1/repos/${REPO_OWNER}/${REPO_NAME}/contents/banners.json`;
 
-const FILENAME_RE = /^(.+#\d{3,6})\.([a-zA-Z0-9]+)$/;
-const USERNAME_RE = /^.+#\d{3,6}$/;
+const FILENAME_RE = /^(.+)\.([a-zA-Z0-9]+)$/;
+const USERNAME_RE = /^.+$/;
 
 let banners = [];
 let skippedCount = 0;
@@ -1025,11 +1025,10 @@ async function loadBanners() {
     banners = [];
     files.forEach(f => {
       const m = f.name.match(FILENAME_RE);
-      if (!m) { skippedCount++; return; }
       banners.push({
-        username: m[1],
+        username: m ? m[1] : f.name,
         filename: f.name,
-        ext: m[2],
+        ext: m ? m[2] : '',
         size: f.size || 0,
         sha: f.sha || ''
       });
@@ -1071,7 +1070,7 @@ function renderAll() {
     document.getElementById('emptyMsg').textContent =
       banners.length === 0
         ? 'Scan the folder above to load banners.'
-        : 'No usernames match your search.';
+        : 'No User IDs match your search.';
     return;
   }
 
@@ -1403,7 +1402,7 @@ async function uploadBanner() {
   const file = uploadSelectedFile;
 
   if (!token) { showSnack('Enter your Codeberg auth token first', 'error'); return; }
-  if (!USERNAME_RE.test(username)) { showSnack('Username must look like username#0000', 'error'); return; }
+  if (!USERNAME_RE.test(username)) { showSnack('Enter a USERID', 'error'); return; }
   if (!file) { showSnack('Choose an image file to upload', 'error'); return; }
 
   const ext = extensionFromFile(file);
